@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReactFlow, Background, BackgroundVariant, Controls, MiniMap, ConnectionMode, useNodesState, useReactFlow } from "@xyflow/react";
-import type { OnSelectionChangeParams } from "@xyflow/react";
+import type { NodeChange, OnSelectionChangeParams } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useProjectStore } from "../store/useProjectStore";
 import { useUiStore } from "../store/useUiStore";
@@ -14,6 +14,25 @@ export function Canvas() {
   const source = useMemo(() => sceneNodes(tab, state.meta), [tab, state.meta]);
   const [nodes, setNodes, onNodesChange] = useNodesState(source);
   const [edgeSelection, setEdgeSelection] = useState({ tabId: tab.id, epoch: ui.editEpoch, ids: new Set<string>() });
+  const onPositionChange = useCallback((changes: NodeChange[]) => {
+    onNodesChange(changes);
+    const positions = new Map(changes.flatMap((change) =>
+      change.type === "position" && change.dragging === false && change.position !== undefined
+        ? [[change.id, change.position] as const] : []));
+    if (!positions.size) return;
+    const current = useProjectStore.getState();
+    if (current.activeTabId !== tab.id) return;
+    const active = current.tabs.find((item) => item.id === tab.id);
+    if (!active || !active.nodes.some((node) => {
+      const next = positions.get(node.id);
+      return next !== undefined && (node.x !== next.x || node.y !== next.y);
+    })) return;
+    current.updateTab({ ...active, nodes: active.nodes.map((node) => {
+      const next = positions.get(node.id);
+      return next !== undefined && (node.x !== next.x || node.y !== next.y)
+        ? { ...node, x: next.x, y: next.y } : node;
+    }) });
+  }, [onNodesChange, tab.id]);
   const onSelectionChange = useCallback(({ nodes: selectedNodes, edges: selectedFlows }: OnSelectionChangeParams) => {
     const selected = [...selectedNodes, ...selectedFlows].filter((item) => !item.id.startsWith("__"));
     const current = useUiStore.getState();
@@ -43,7 +62,7 @@ export function Canvas() {
   const renderTab = { ...tab, nodes: tab.nodes.map((node) => { const position = positions.get(node.id); return position ? { ...node, ...position } : node; }) };
   const edges = sceneEdges(renderTab, ui.selected).map((edge) => ({ ...edge, selected: edge.selected || (edgeSelection.tabId === tab.id && edgeSelection.epoch === ui.editEpoch && edgeSelection.ids.has(edge.id)) }));
   return <main className="canvas" aria-label="정보 흐름도 캔버스">
-    <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onNodesChange} onSelectionChange={onSelectionChange}
+    <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onPositionChange} onSelectionChange={onSelectionChange}
       onEdgesChange={(changes) => setEdgeSelection((current) => {
         const ids = new Set(current.tabId === tab.id && current.epoch === ui.editEpoch ? current.ids : []);
         for (const change of changes) {
@@ -59,11 +78,6 @@ export function Canvas() {
         const targetHandle = ports.includes(connection.targetHandle ?? "") ? connection.targetHandle as Port : null;
         const id = state.addFlow({ ...defaultFlow(connection.source, connection.target), sourceHandle, targetHandle });
         ui.select(id); ui.notify("초안 흐름을 만들었습니다. 오른쪽에서 이름과 속성을 입력하세요.");
-      }}
-      onNodeDragStop={(_, __, moved) => {
-        const current = useProjectStore.getState(), active = current.tabs.find((t) => t.id === current.activeTabId)!;
-        const movedPositions = new Map(moved.map((node) => [node.id, node.position]));
-        current.updateTab({ ...active, nodes: active.nodes.map((node) => { const position = movedPositions.get(node.id); return position ? { ...node, ...position } : node; }) });
       }}
       onNodeClick={(_, node) => { if (!node.id.startsWith("__")) ui.select(node.id); }}
       onEdgeClick={(_, edge) => ui.select(edge.id)}

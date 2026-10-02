@@ -2,6 +2,7 @@ import { beforeEach, afterEach, expect, it, vi } from "vitest";
 
 beforeEach(() => {
   vi.resetModules();
+  vi.stubGlobal("navigator", { locks: { request: async (_name: string, _options: unknown, callback: () => void) => callback() } });
   const data = new Map<string, string>();
   vi.stubGlobal("localStorage", {
     getItem: (k: string) => data.get(k) ?? null,
@@ -10,7 +11,7 @@ beforeEach(() => {
   });
   vi.stubGlobal("window", { localStorage });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(async () => { await (await import("../lib/projectStorage")).waitForPendingSaves(); vi.unstubAllGlobals(); });
 async function setup() {
   // Static imports would run before the per-test storage and module reset.
   const { useProjectStore: store } = await import("./useProjectStore");
@@ -27,6 +28,7 @@ it("undoes a multi-action deletion atomically and persists the restored graph", 
   store.getState().removeNode(tab.nodes[1].id);
   expect(undo()).toBe(true);
   expect(store.getState().tabs).toEqual(before);
+  await (await import("../lib/projectStorage")).waitForPendingSaves();
   expect(
     JSON.parse(localStorage.getItem("infoflow-project-v1")!).state.tabs,
   ).toEqual(before);

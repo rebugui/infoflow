@@ -2,9 +2,7 @@ import { useState } from "react";
 import { projectSnapshot } from "../store/useProjectStore";
 import { useUiStore } from "../store/useUiStore";
 import { download, fileName } from "../lib/download";
-import { exportPptx } from "../lib/export/pptx";
-import { exportPdf } from "../lib/export/pdf";
-import { exportImage } from "../lib/export/image";
+// Export engines are large; load only the selected format to keep initial rendering small.
 type Format = "pptx-current" | "pptx-all" | "png" | "svg" | "pdf" | "json";
 export function ExportMenu() {
   const [open, setOpen] = useState(false), [busy, setBusy] = useState(false);
@@ -15,11 +13,11 @@ export function ExportMenu() {
       const project = projectSnapshot();
       if (format === "json") download(new Blob([JSON.stringify(project, null, 2)], { type: "application/json" }), fileName(project, "전체", "json"));
       else if (format === "pptx-current" || format === "pptx-all") {
-        await exportPptx(project, format === "pptx-all" ? "all" : project.activeTabId);
+        await (await import("../lib/export/pptx")).exportPptx(project, format === "pptx-all" ? "all" : project.activeTabId);
       } else if (format === "pdf") {
-        await exportPdf(project);
+        await (await import("../lib/export/pdf")).exportPdf(project);
       } else {
-        await exportImage(project, format);
+        await (await import("../lib/export/image")).exportImage(project, format);
       }
       notify("내보내기가 완료되었습니다");
     } catch (error) { notify(`내보내기 실패: ${error instanceof Error ? error.message : String(error)}`); }

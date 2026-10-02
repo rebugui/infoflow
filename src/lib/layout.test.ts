@@ -9,7 +9,16 @@ it('lays out branches, cycles, self-flows and isolated nodes deterministically b
     flows: [['a', 'b'], ['a', 'c'], ['b', 'd'], ['c', 'd'], ['d', 'e'], ['e', 'd'], ['a', 'a']].map(([from, to], i) => ({ ...defaultFlow(from, to), id: `f${i}` })),
   };
   const before = structuredClone(tab), result = layoutDiagram(tab);
-  expect(result.nodes.map(({ x, y }) => [x, y])).toEqual([[80, 220], [380, 220], [380, 400], [680, 220], [680, 400], [80, 400]]);
+  const byId = new Map(result.nodes.map((node) => [node.id, node]));
+  expect(byId.get('a')!.x).toBeLessThan(byId.get('b')!.x);
+  expect(byId.get('b')!.x).toBe(byId.get('c')!.x);
+  expect(byId.get('c')!.y).toBeGreaterThan(byId.get('b')!.y);
+  expect(byId.get('d')!.x).toBeGreaterThan(byId.get('b')!.x);
+  expect(byId.get('d')!.x).toBe(byId.get('e')!.x);
+  expect(byId.get('isolated')!.x).toBe(byId.get('a')!.x);
+  for (const [from, to] of [['a', 'b'], ['b', 'd']]) {
+    expect(byId.get(to)!.x - (byId.get(from)!.x + 200)).toBeGreaterThanOrEqual(180 + 80);
+  }
   expect(layoutDiagram(tab)).toEqual(result);
   expect(tab).toEqual(before);
   expect(result.flows).toEqual(tab.flows);

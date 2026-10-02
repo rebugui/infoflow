@@ -1,30 +1,61 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { useProjectStore } from "../store/useProjectStore";
 import { useUiStore } from "../store/useUiStore";
+import { useCompactLayout } from "../hooks/useCompactLayout";
 import { layoutDiagram } from "../lib/layout";
 import { parseProject } from "../lib/projectValidation";
 import { undo, redo } from "../store/projectHistory";
 import { MetaModal } from "./MetaModal";
 import { TemplateChoice } from "./TemplateChoice";
 import { ExportMenu } from "./ExportMenu";
+import { StorageNotice } from "./StorageNotice";
+
 export function TopBar() {
   const state = useProjectStore(), ui = useUiStore(), view = useReactFlow();
+  const compact = useCompactLayout();
   const input = useRef<HTMLInputElement>(null);
+  const header = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [modal, setModal] = useState<"meta" | "new" | null>(null);
+  useEffect(() => {
+    if (!menuOpen || !compact) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!header.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [menuOpen, compact]);
+  const openModal = (next: 'meta' | 'new') => {
+    if (compact) menuButton.current?.focus();
+    setMenuOpen(false);
+    setModal(next);
+  };
   return <>
-    <header className="topbar"><b>InfoFlow</b><span className="top-title" title={state.meta.docTitle}>{state.meta.docTitle}</span><small>정보 흐름도 편집기</small>
-      <button onClick={() => setModal("meta")}>문서 정보</button>
+    <header className="topbar" ref={header}><b>InfoFlow</b><span className="top-title" title={state.meta.docTitle}>{state.meta.docTitle}</span><small>정보 흐름도 편집기</small>
       <button title="Ctrl/Cmd+Z" onClick={() => ui.notify(undo() ? "실행을 취소했습니다" : "취소할 작업이 없습니다")}>실행 취소</button>
       <button title="Ctrl/Cmd+Shift+Z 또는 Ctrl/Cmd+Y" onClick={() => ui.notify(redo() ? "다시 실행했습니다" : "다시 실행할 작업이 없습니다")}>다시 실행</button>
-      <button onClick={() => {
-        if (!confirm("드래그로 조정한 위치가 자동 배치 위치로 바뀝니다. 계속할까요?")) return;
-        state.updateTab(layoutDiagram(state.tabs.find((t) => t.id === state.activeTabId)!));
-        setTimeout(() => void view.fitView({ padding: 0.15 }), 100);
-      }}>자동 배치</button>
-      <ExportMenu />
-      <button onClick={() => input.current?.click()}>JSON 불러오기</button>
-      <button onClick={() => { if (confirm("현재 프로젝트가 교체됩니다. 필요한 경우 JSON 백업을 먼저 저장하세요. 계속할까요?")) setModal("new"); }}>새 프로젝트</button>
+      {compact && <button ref={menuButton} aria-expanded={menuOpen} aria-controls="topbar-actions" onClick={() => setMenuOpen(!menuOpen)}>메뉴</button>}
+      <div id="topbar-actions" className="topbar-actions" role={compact ? 'region' : undefined} aria-label={compact ? '편집 메뉴' : undefined} hidden={compact && !menuOpen} inert={compact && !menuOpen}>
+        <button onClick={() => openModal('meta')}>문서 정보</button>
+        <button onClick={() => {
+          if (!confirm("드래그로 조정한 위치가 자동 배치 위치로 바뀝니다. 계속할까요?")) return;
+          state.updateTab(layoutDiagram(state.tabs.find((t) => t.id === state.activeTabId)!));
+          setTimeout(() => void view.fitView({ padding: 0.15 }), 100);
+        }}>자동 배치</button>
+        <ExportMenu />
+        <button onClick={() => { setMenuOpen(false); input.current?.click(); }}>JSON 불러오기</button>
+        <button onClick={() => { if (confirm("현재 프로젝트가 교체됩니다. 필요한 경우 JSON 백업을 먼저 저장하세요. 계속할까요?")) openModal('new'); }}>새 프로젝트</button>
+        {compact && <StorageNotice />}
+      </div>
       <input hidden aria-label="InfoFlow JSON 백업 파일" ref={input} type="file" accept=".json,application/json" onChange={async (event) => {
         const file = event.target.files?.[0]; event.target.value = "";
         if (!file) return;

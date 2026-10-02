@@ -59,7 +59,7 @@ export function layoutDiagram(tab: DiagramTab): DiagramTab {
     const column = columns[component.get(node.id)!];
     const row = rows.get(column) ?? 0;
     rows.set(column, row + 1);
-    return { ...node, x: 80 + column * 300, y: 220 + row * 180 };
+    return { ...node, x: 80 + column * 460, y: 220 + row * 180 };
   }) };
 }
 

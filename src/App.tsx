@@ -1,21 +1,38 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { Canvas } from "./components/Canvas";
-import { LeftPanel } from "./components/LeftPanel";
-import { RightPanel } from "./components/RightPanel";
+import { ResponsiveWorkspace } from "./components/ResponsiveWorkspace";
 import { TopBar } from "./components/TopBar";
 import { Toast } from "./components/Toast";
 import { DiagramTabs } from "./components/DiagramTabs";
 import { TemplateChoice } from "./components/TemplateChoice";
-import { useProjectStore } from "./store/useProjectStore";
+import { StorageNotice } from "./components/StorageNotice";
+import { projectSnapshot, useProjectStore } from "./store/useProjectStore";
 import { useUiStore } from "./store/useUiStore";
-import { unlockStorage } from "./lib/projectStorage";
-import { download } from "./lib/download";
+import { registerStorageEvents, unlockStorage } from "./lib/projectStorage";
+import { download, fileName } from "./lib/download";
 import { HistoryShortcuts } from "./components/HistoryShortcuts";
+import { useCompactLayout } from "./hooks/useCompactLayout";
 import "./styles.css";
+
 export default function App() {
   const ui = useUiStore();
+  const compact = useCompactLayout();
+  const allowReload = useRef(false);
   const [welcome, setWelcome] = useState(() => ["empty", "unavailable"].includes(useUiStore.getState().storageStatus));
+  useEffect(() => registerStorageEvents(), []);
+  useEffect(() => {
+    const protect = (event: BeforeUnloadEvent) => {
+      if (allowReload.current || useUiStore.getState().saveStatus === 'saved') return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', protect);
+    return () => window.removeEventListener('beforeunload', protect);
+  }, []);
+  const backup = () => {
+    const project = projectSnapshot();
+    download(new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' }), fileName(project, '전체', 'json'));
+  };
   if (ui.storageStatus === "blocked") return <main className="recovery-screen"><section className="recovery-card">
     <h1>InfoFlow · 저장 데이터 복구 필요</h1>
     <p>이 브라우저의 저장 데이터가 손상되었거나 지원하지 않는 백업 형식입니다. 원본은 덮어쓰지 않고 보존했습니다.</p>
@@ -29,9 +46,18 @@ export default function App() {
   </section></main>;
   return <ReactFlowProvider><div className="app">
     <HistoryShortcuts /><TopBar />
-    {(ui.saveError || ui.storageStatus === "unavailable") && <div className="save-banner" role="alert">자동 저장 실패 — JSON 백업을 저장하세요. 현재 편집 상태는 메모리에 유지되며 창을 닫으면 사라질 수 있습니다.</div>}
-    <DiagramTabs /><div className="workspace"><LeftPanel /><Canvas /><RightPanel /></div>
-    <details className="storage-notice"><summary>저장·보안 안내 · 브라우저 로컬 자동 저장</summary><p>편집 데이터는 이 브라우저에서만 처리하며 외부 API나 AI 서비스로 전송하지 않습니다. 로그인·암호화 저장·서버 동기화는 제공하지 않습니다. localStorage와 JSON은 평문이며 같은 브라우저 프로필·origin의 다른 스크립트가 접근할 수 있습니다. 앱별 저장 키 분리는 충돌 방지이지 접근통제가 아닙니다. 민감한 실제 값 대신 항목명과 합성 예시를 사용하세요.</p></details>
+    {ui.saveStatus !== 'saved' && <div className="save-banner" role="alert">
+      {ui.saveStatus === 'conflict' ? <><span>다른 탭에서 데이터가 변경되었습니다. 이 탭의 자동 저장을 중지했습니다.</span> <button onClick={backup}>현재 편집 JSON 백업</button> <button onClick={() => {
+        if (!confirm('현재 편집 내용을 백업했나요? 저장된 최신 내용을 불러오면 이 탭의 미저장 편집이 사라집니다.')) return;
+        allowReload.current = true;
+        window.location.reload();
+      }}>최신 내용 다시 불러오기</button></> : <>
+        <span>{ui.saveStatus === 'saving' ? '저장 중…' : ui.saveStatus === 'unsupported' ? '이 브라우저에서는 안전한 자동 저장을 사용할 수 없습니다 — JSON 백업을 저장하세요' : '자동 저장 실패 — JSON 백업을 저장하세요'}</span>
+        <button onClick={backup}>현재 편집 JSON 백업</button>
+      </>}
+    </div>}
+    <DiagramTabs /><ResponsiveWorkspace />
+    {!compact && <StorageNotice />}
     <Toast />
     {welcome && <TemplateChoice title="InfoFlow 시작하기" onClose={() => { useProjectStore.getState().resetProject(false); setWelcome(false); }} onChoose={(template) => { useProjectStore.getState().resetProject(template); setWelcome(false); }} />}
   </div></ReactFlowProvider>;

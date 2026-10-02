@@ -144,17 +144,17 @@ function diagramSlide(pptx: PptxGenJS, project: Project, tab: DiagramTab) {
       });
     }
   }
-  for (const node of tab.nodes) {
-    const style = nodeStyle(node);
-    shape(style.shape, style.color, node.x, node.y, NODE_WIDTH, NODE_HEIGHT);
-    text(nodeLines(node).join("\n"), node.x + 8, node.y + 8, NODE_WIDTH - 16, NODE_HEIGHT - 16, { align: "center" });
-  }
   for (const { flow, route } of routes) {
     const lines = flowLines(flow);
     if (route.routeWarning) lines.push("끝점 노드 위치를 분리하세요");
     text(lines.join("\n"), route.label.x - 90, route.label.y - 28, 180, 56, {
-      align: "center", fontSize: 11 * 72 * scale, fill: { color: "FFFFFF" },
+      align: "center", fontSize: 9 * 72 * scale, fill: { color: "FFFFFF" },
     });
+  }
+  for (const node of tab.nodes) {
+    const style = nodeStyle(node);
+    shape(style.shape, style.color, node.x, node.y, NODE_WIDTH, NODE_HEIGHT);
+    text(nodeLines(node).join("\n"), node.x + 8, node.y + 8, NODE_WIDTH - 16, NODE_HEIGHT - 16, { align: "center" });
   }
   shape("rect", "FFFFFF", 0, 0, 460, 110);
   const m = project.meta;

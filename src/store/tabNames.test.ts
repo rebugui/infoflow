@@ -2,6 +2,7 @@ import { beforeEach, afterEach, expect, it, vi } from "vitest";
 
 beforeEach(() => {
   vi.resetModules();
+  vi.stubGlobal("navigator", { locks: { request: async (_name: string, _options: unknown, callback: () => void) => callback() } });
   const data = new Map<string, string>();
   vi.stubGlobal("localStorage", {
     getItem: (k: string) => data.get(k) ?? null,
@@ -10,7 +11,7 @@ beforeEach(() => {
   });
   vi.stubGlobal("window", { localStorage });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(async () => { await (await import("../lib/projectStorage")).waitForPendingSaves(); vi.unstubAllGlobals(); });
 
 async function setup() {
   // Import after installing fresh storage so persistence is isolated per test.

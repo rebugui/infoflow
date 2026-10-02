@@ -14,7 +14,7 @@ export function FlowNode({ data, selected }: NodeProps<Node<{ node: FlowNodeMode
   return <div className={`flow-node shape-${style.shape}`} aria-label={lines.join(" · ")}>
     <NodeShape shape={style.shape} color={style.color} stroke={selected ? "#2563EB" : "#404040"} />
     <div className="flow-node-label">{lines.map((line, index) => index === 0 ? <strong key={index} title={line}>{line}</strong> : <span key={index} title={line}>{line}</span>)}</div>
-    {data.warning && <span className="badge warn" title="검토 필요" aria-label="검토 필요" />}
-    {([['top', Position.Top], ['right', Position.Right], ['bottom', Position.Bottom], ['left', Position.Left]] as const).map(([id, position]) => <Handle key={id} type="source" position={position} id={id} aria-label={`${id} 연결점`} />)}
+    {data.warning && <span className="badge warn" title="검토 필요" role="img" aria-label="검토 필요" />}
+    {([['top', Position.Top], ['right', Position.Right], ['bottom', Position.Bottom], ['left', Position.Left]] as const).map(([id, position]) => <Handle key={id} type="source" position={position} id={id} />)}
   </div>;
 }

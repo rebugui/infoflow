@@ -12,7 +12,7 @@
   --navy: #132e54;
   --blue: #2563eb;
   --line: #dce3ed;
-  --muted: #708097;
+  --muted: #53627a;
 }
 * {
   box-sizing: border-box;
@@ -99,9 +99,12 @@ h3 {
 }
 .workspace {
   display: flex;
+  position: relative;
   flex: 1;
+  min-width: 0;
   min-height: 0;
 }
+.workspace-region { display: contents; }
 .canvas {
   flex: 1;
   min-width: 0;
@@ -383,7 +386,7 @@ summary {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-@media (max-width: 1050px) {
+@media (min-width: 901px) and (max-width: 1050px) {
   .left {
     width: 230px;
   }
@@ -604,7 +607,7 @@ th {
 .tab button span {
   font-size: 10px;
   background: #e3eaf4;
-  color: #5e718f;
+  color: #53627a;
   padding: 2px 5px;
   border-radius: 3px;
   margin-right: 7px;
@@ -621,7 +624,7 @@ th {
 .tabs-hint {
   margin-left: auto;
   white-space: nowrap;
-  color: #8491a4;
+  color: #53627a;
   font-size: 10px;
   padding: 0 10px;
 }
@@ -687,7 +690,7 @@ th {
 .topbar {
   overflow: visible;
 }
-@media (max-width: 1200px) {
+@media (min-width: 901px) and (max-width: 1200px) {
   .top-title,
   .topbar small {
     display: none;
@@ -718,3 +721,96 @@ th {
 button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .toast { max-width: min(90vw, 780px); white-space: normal; }
 .title-block, .legend { pointer-events: none; user-select: none; }
+.topbar-actions { display: contents; }
+:is(button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+@media (max-width: 900px) {
+  .app { min-height: 320px; padding-bottom: env(safe-area-inset-bottom); }
+  .topbar {
+    position: relative;
+    z-index: 20;
+    height: auto;
+    min-height: 56px;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
+  }
+  .topbar b { font-size: 17px; letter-spacing: -0.5px; margin-right: auto; }
+  .topbar .top-title, .topbar small { display: none; }
+  .topbar > button { min-width: 44px; min-height: 44px; padding: 6px; white-space: normal; }
+  .topbar-actions {
+    position: absolute;
+    top: 100%;
+    left: 8px;
+    right: 8px;
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    max-height: 60dvh;
+    overflow-y: auto;
+    background: white;
+    color: #172b4d;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px #0003;
+  }
+  .topbar-actions[hidden], .workspace-nav[hidden] { display: none; }
+  .topbar-actions > button { width: 100%; text-align: left; }
+  .topbar-actions .export-menu > button { width: 100%; text-align: left; }
+  .topbar-actions .dropdown {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    box-shadow: none;
+    margin-top: 6px;
+  }
+  .storage-notice { padding: 8px; overflow-wrap: anywhere; }
+  .workspace-nav {
+    display: flex;
+    flex-shrink: 0;
+    gap: 4px;
+    padding: 5px max(8px, env(safe-area-inset-right)) 5px max(8px, env(safe-area-inset-left));
+    background: #edf1f7;
+  }
+  .workspace-nav button { flex: 1; min-width: 0; padding: 6px 2px; }
+  .workspace-nav button[aria-pressed="true"] { background: #e3eaf4; border-color: #2563eb; font-weight: 700; }
+  .workspace-region {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    visibility: hidden;
+  }
+  .workspace-region.active { visibility: visible; }
+  .workspace-region[inert] .react-flow__node { visibility: hidden !important; }
+  .workspace-region > :is(.panel, .canvas) { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+  .workspace-region > .panel { overflow-y: auto; border: 0; }
+  .diagram-tabs { width: 100%; min-width: 0; padding-left: 8px; padding-right: 8px; }
+  .canvas-hint, .tabs-hint, .react-flow__minimap { display: none; }
+  .modal {
+    width: calc(100vw - 16px);
+    max-width: none;
+    max-height: calc(100dvh - 16px);
+    padding: 16px;
+    overflow: auto;
+  }
+  .meta-grid, .template-choices { grid-template-columns: minmax(0, 1fr); }
+  .form-row { grid-template-columns: minmax(0, 1fr); }
+  .modal-actions { flex-wrap: wrap; }
+  .save-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; overflow-wrap: anywhere; }
+  .recovery-screen { padding: 8px; }
+  .recovery-card { min-width: 0; width: 100%; max-height: calc(100dvh - 16px); overflow: auto; padding: 16px; overflow-wrap: anywhere; }
+  .toast { max-width: calc(100vw - 16px); overflow-wrap: anywhere; bottom: max(8px, env(safe-area-inset-bottom)); }
+  .app :is(.topbar, .workspace-nav, .diagram-tabs, .panel, .modal, .save-banner) button,
+  .recovery-screen button, .canvas .react-flow__controls-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .app :is(.panel, .modal, .topbar-actions) :is(input, select, textarea),
+  .recovery-screen :is(input, select, textarea) { font-size: 16px; }
+}

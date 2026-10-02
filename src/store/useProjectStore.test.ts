@@ -6,16 +6,18 @@ import { nextNodePosition } from '../lib/layout';
 // Import stores dynamically after resetting modules and installing isolated persistence.
 beforeEach(() => {
   vi.resetModules();
+  vi.stubGlobal('navigator', { locks: { request: async (_name: string, _options: unknown, callback: () => void) => callback() } });
   const data = new Map<string, string>();
   vi.stubGlobal('localStorage', { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => data.set(key, value), removeItem: (key: string) => data.delete(key) });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(async () => { await (await import('../lib/projectStorage')).waitForPendingSaves(); vi.unstubAllGlobals(); });
 
 it('rejects invalid replacement and CRUD atomically without changing storage, selection or history', async () => {
   const { useProjectStore: store, projectSnapshot } = await import('./useProjectStore');
   const { useUiStore: ui } = await import('./useUiStore');
   store.getState().resetProject(true);
   const { undo } = await import('./projectHistory');
+  await (await import('../lib/projectStorage')).waitForPendingSaves();
   const before = projectSnapshot(), saved = localStorage.getItem('infoflow-project-v1');
   ui.getState().select(before.tabs[0].nodes[0].id);
   const epoch = ui.getState().editEpoch;
