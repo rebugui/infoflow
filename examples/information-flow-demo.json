@@ -1,0 +1,151 @@
+{
+  "app": "infoflow",
+  "schema": 1,
+  "meta": {
+    "docTitle": "정보 흐름도 — 합성 예제",
+    "version": "1.0",
+    "date": "2026-10-02",
+    "author": "",
+    "reviewer": ""
+  },
+  "revisions": [],
+  "tabs": [
+    {
+      "id": "78b3b157-7234-49ee-968f-7b284bfad200",
+      "name": "흐름도 1",
+      "nodes": [
+        {
+          "kind": "external",
+          "name": "고객",
+          "owner": "",
+          "zone": "",
+          "description": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "x": 80,
+          "y": 220,
+          "id": "18192dc9-4c69-4b42-9ee0-6da727fd4813"
+        },
+        {
+          "kind": "system",
+          "name": "주문 서비스",
+          "owner": "",
+          "zone": "",
+          "description": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "x": 380,
+          "y": 220,
+          "id": "96239e56-63b0-4b6a-82b6-23de17db8bb9"
+        },
+        {
+          "kind": "process",
+          "name": "주문 검증",
+          "owner": "",
+          "zone": "",
+          "description": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "x": 680,
+          "y": 220,
+          "id": "90cfb950-b890-47e0-9cb9-bbca22bbfc5f"
+        },
+        {
+          "kind": "store",
+          "name": "주문 저장소",
+          "owner": "",
+          "zone": "",
+          "description": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "x": 980,
+          "y": 220,
+          "id": "7bbcebd7-2a03-4f6b-9072-2076014f7237"
+        },
+        {
+          "kind": "external",
+          "name": "배송업체",
+          "owner": "",
+          "zone": "",
+          "description": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "x": 1280,
+          "y": 220,
+          "id": "f9eaeb20-785b-41f4-a60f-5b2c1b10103e"
+        }
+      ],
+      "flows": [
+        {
+          "from": "18192dc9-4c69-4b42-9ee0-6da727fd4813",
+          "to": "96239e56-63b0-4b6a-82b6-23de17db8bb9",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "name": "주문 접수",
+          "dataItems": [
+            "이름",
+            "주소",
+            "주문번호"
+          ],
+          "purpose": "",
+          "classification": "unknown",
+          "transport": "",
+          "frequency": "",
+          "protection": "unknown",
+          "protectionNote": "",
+          "notes": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "id": "d99e94a2-da46-4d41-9a8d-4ebee2112fa8"
+        },
+        {
+          "from": "96239e56-63b0-4b6a-82b6-23de17db8bb9",
+          "to": "90cfb950-b890-47e0-9cb9-bbca22bbfc5f",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "name": "검증 요청",
+          "dataItems": [
+            "주문번호"
+          ],
+          "purpose": "",
+          "classification": "unknown",
+          "transport": "",
+          "frequency": "",
+          "protection": "unknown",
+          "protectionNote": "",
+          "notes": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "id": "c8f7e2ae-3dcd-4133-8a40-deb424adbbdc"
+        },
+        {
+          "from": "90cfb950-b890-47e0-9cb9-bbca22bbfc5f",
+          "to": "7bbcebd7-2a03-4f6b-9072-2076014f7237",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "name": "주문 저장",
+          "dataItems": [
+            "이름",
+            "주소",
+            "주문번호"
+          ],
+          "purpose": "",
+          "classification": "unknown",
+          "transport": "",
+          "frequency": "",
+          "protection": "unknown",
+          "protectionNote": "",
+          "notes": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "id": "70dcfea2-644f-488c-95b7-9c020428a0c8"
+        },
+        {
+          "from": "7bbcebd7-2a03-4f6b-9072-2076014f7237",
+          "to": "f9eaeb20-785b-41f4-a60f-5b2c1b10103e",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "name": "배송 요청",
+          "dataItems": [
+            "이름",
+            "주소",
+            "주문번호"
+          ],
+          "purpose": "",
+          "classification": "unknown",
+          "transport": "",
+          "frequency": "",
+          "protection": "unknown",
+          "protectionNote": "",
+          "notes": "합성 예시 — 실제 운영 설정이 아닙니다",
+          "id": "551a5be8-fa0c-4588-9086-3fe07e1e4f5c"
+        }
+      ]
+    }
+  ],
+  "activeTabId": "78b3b157-7234-49ee-968f-7b284bfad200"
+}
